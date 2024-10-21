@@ -52,6 +52,7 @@ def OctreeRender_trilinear_fast(
 
 
 @torch.no_grad()
+# 评估模型在测试数据集上的表现，并计算相关指标  
 def evaluation(
     test_dataset,
     model,
