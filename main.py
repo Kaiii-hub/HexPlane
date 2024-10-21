@@ -4,12 +4,12 @@ import random
 
 import numpy as np
 import torch
-from omegaconf import OmegaConf
-from torch.utils.tensorboard import SummaryWriter
+from omegaconf import OmegaConf  # 配置文件
+from torch.utils.tensorboard import SummaryWriter  # 日志记录
 
-from config.config import Config
+from config.config import Config  # 配置文件
 from hexplane.dataloader import get_test_dataset, get_train_dataset
-from hexplane.model import init_model
+from hexplane.model import init_model 
 from hexplane.render.render import evaluation, evaluation_path
 from hexplane.render.trainer import Trainer
 
@@ -18,61 +18,67 @@ torch.set_default_dtype(torch.float32)
 
 
 def render_test(cfg):
-    test_dataset = get_test_dataset(cfg, is_stack=True)
-    ndc_ray = test_dataset.ndc_ray
-    white_bg = test_dataset.white_bg
+    # 加载测试数据集并取 ndc_ray 和 white_bg 属性
+    test_dataset = get_test_dataset(cfg, is_stack=True) 
+    ndc_ray = test_dataset.ndc_ray # ndc_ray是归一化设备坐标系下的光线
+    white_bg = test_dataset.white_bg  # 获取测试数据集的白色背景属性
 
+    # 检查 cfg.systems.ckpt 指定的检查点路径是否存在。如果不存在，打印错误信息并返回
     if not os.path.exists(cfg.systems.ckpt):
         print("the ckpt path does not exists!!")
         return
-
+    # 使用 torch.load 加载模型 HexPlane，并将其映射到指定的设备 device
     HexPlane = torch.load(cfg.systems.ckpt, map_location=device)
+
+    # 获取检查点路径的目录路径  
     logfolder = os.path.dirname(cfg.systems.ckpt)
 
+    # 如果 cfg.render_train 为 True，则创建训练图像的保存目录   
     if cfg.render_train:
-        os.makedirs(f"{logfolder}/imgs_train_all", exist_ok=True)
-        train_dataset = get_train_dataset(cfg, is_stack=True)
+        os.makedirs(f"{logfolder}/imgs_train_all", exist_ok=True)  # 创建训练图像的保存目录
+        train_dataset = get_train_dataset(cfg, is_stack=True)  # 获取训练数据集 
+        # 调用 evaluation 函数，渲染训练数据集的图像
         evaluation(
-            train_dataset,
-            HexPlane,
-            cfg,
-            f"{logfolder}/imgs_train_all/",
-            prefix="train",
-            N_vis=-1,
-            N_samples=-1,
+            train_dataset, # 训练数据集 
+            HexPlane, # 模型
+            cfg, # 配置文件
+            f"{logfolder}/imgs_train_all/", # 训练图像的保存路径    
+            prefix="train", # 图像的前缀
+            N_vis=-1, # 可视化的图像数量
+            N_samples=-1, # 采样的点数
             ndc_ray=ndc_ray,
-            white_bg=white_bg,
-            device=device,
+            white_bg=white_bg, # 白色背景
+            device=device, # 设备
         )
-
+    # 如果 cfg.render_test 为 True，则创建测试图像的保存目录        
     if cfg.render_test:
         os.makedirs(f"{logfolder}/imgs_test_all", exist_ok=True)
         evaluation(
-            test_dataset,
-            HexPlane,
-            cfg,
+            test_dataset, # 测试数据集
+            HexPlane, # 模型
+            cfg, # 配置文件
             f"{logfolder}/imgs_test_all/",
-            prefix="test",
-            N_vis=-1,
-            N_samples=-1,
-            ndc_ray=ndc_ray,
-            white_bg=white_bg,
-            device=device,
+            prefix="test", # 图像的前缀
+                N_vis=-1, # 可视化的图像数量
+            N_samples=-1, # 采样的点数
+            ndc_ray=ndc_ray, # ndc_ray是归一化设备坐标系下的光线
+            white_bg=white_bg, # 白色背景
+            device=device, # 设备
         )
 
     if cfg.render_path:
         os.makedirs(f"{logfolder}/imgs_path_all", exist_ok=True)
         evaluation_path(
-            test_dataset,
-            HexPlane,
-            cfg,
-            f"{logfolder}/imgs_path_all/",
-            prefix="test",
-            N_vis=-1,
-            N_samples=-1,
-            ndc_ray=ndc_ray,
-            white_bg=white_bg,
-            device=device,
+            test_dataset, # 测试数据集      
+            HexPlane, # 模型
+            cfg, # 配置文件
+            f"{logfolder}/imgs_path_all/", # 路径图像的保存路径 
+            prefix="test", # 图像的前缀
+            N_vis=-1, # 可视化的图像数量
+            N_samples=-1, # 采样的点数
+            ndc_ray=ndc_ray, # ndc_ray是归一化设备坐标系下的光线    
+            white_bg=white_bg, # 白色背景
+            device=device, # 设备
         )
 
 
